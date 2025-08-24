@@ -1,0 +1,114 @@
+index.html                                                                                               <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Streaming Word Count</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 20px; }
+    h1 { color: #4f8cff; }
+    .controls { margin-bottom: 15px; }
+    input, textarea, select, button {
+      margin: 5px 0; padding: 8px; border-radius: 5px; border: 1px solid #333;
+    }
+    textarea { width: 100%; height: 120px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #333; text-align: left; }
+    th { background: #222; }
+  </style>
+</head>
+<body>
+  <h1>Streaming Word Count (No Frameworks)</h1>
+
+  <div class="controls">
+    <label>Top-N:
+      <select id="topN">
+        <option value="3">3</option>
+        <option value="5" selected>5</option>
+        <option value="10">10</option>
+      </select>
+    </label>
+    <label>Min token length:
+      <input type="number" id="minLen" value="1" min="1"/>
+    </label>
+    <label>
+      <input type="checkbox" id="useStopwords"> Remove stopwords
+    </label>
+    <button id="clearBtn">Clear</button>
+  </div>
+
+  <div>
+    <input id="lineInput" type="text" placeholder="Type a line and press Enter"/>
+    <textarea id="bulk" placeholder="Paste multiple lines..."></textarea><br>
+    <button id="ingestBulk">Ingest pasted lines</button>
+  </div>
+
+  <h3>Stats</h3>
+  <p>Unique words: <span id="uniqueCount">0</span> | Total tokens: <span id="totalCount">0</span></p>
+
+  <table>
+    <thead><tr><th>#</th><th>Word</th><th>Count</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <script>
+    const lineInput = document.getElementById('lineInput');
+    const bulk = document.getElementById('bulk');
+    const ingestBulkBtn = document.getElementById('ingestBulk');
+    const clearBtn = document.getElementById('clearBtn');
+    const tbody = document.getElementById('tbody');
+    const uniqueCountEl = document.getElementById('uniqueCount');
+    const totalCountEl = document.getElementById('totalCount');
+    const topNEl = document.getElementById('topN');
+    const minLenEl = document.getElementById('minLen');
+    const useStopwordsEl = document.getElementById('useStopwords');
+
+    const STOP = new Set(['a','an','the','and','or','but','if','then','else','of','on','in','to','for','with','as','by','is','are','was','were','be','been','being','at','from','it','that','this','these','those','i','you','he','she','we','they','them','his','her','their','our','your']);
+    const counts = new Map();
+    let totalTokens = 0;
+
+    function tokenize(line, minLen, useStop) {
+      const lower = line.toLowerCase();
+      const matches = lower.match(/[a-z0-9']+/g) || [];
+      return matches.filter(w => w.length >= minLen && (!useStop || !STOP.has(w)));
+    }
+
+    function ingestLine(line) {
+      const minLen = parseInt(minLenEl.value) || 1;
+      const useStop = useStopwordsEl.checked;
+      for (const word of tokenize(line, minLen, useStop)) {
+        totalTokens++;
+        counts.set(word, (counts.get(word) || 0) + 1);
+      }
+      render();
+    }
+
+    lineInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        ingestLine(lineInput.value);
+        lineInput.value = '';
+      }
+    });
+
+    ingestBulkBtn.addEventListener('click', () => {
+      const lines = bulk.value.split(/\\r?\\n/);
+      lines.forEach(ingestLine);
+      bulk.value = '';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      counts.clear(); totalTokens = 0; render();
+    });
+
+    function render() {
+      const N = parseInt(topNEl.value);
+      const arr = Array.from(counts.entries()).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]));
+      const top = arr.slice(0, N);
+      tbody.innerHTML = top.map(([w,c],i) => <tr><td>${i+1}</td><td>${w}</td><td>${c}</td></tr>).join('');
+      uniqueCountEl.textContent = counts.size;
+      totalCountEl.textContent = totalTokens;
+    }
+  </script>
+</body>
+</html>
