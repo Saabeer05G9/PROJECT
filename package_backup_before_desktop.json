@@ -1,0 +1,15 @@
+{
+  "name": "virtual-classroom",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aiden0z/pptx-renderer": "^1.2.4",
+    "vite": "^8.2.1"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "virtual-classroom",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron-main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron electron-main.cjs",
+    "desktop": "electron electron-main.cjs"
+  },
+  "dependencies": {
+    "@aiden0z/pptx-renderer": "^1.2.4",
+    "vite": "^8.2.1"
+  },
+  "devDependencies": {
+    "electron": "^43.4.0"
+  }
+}
